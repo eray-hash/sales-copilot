@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaneCore AI · Sales Copilot</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231e3a5f'/><text x='16' y='22' font-size='16' font-weight='800' text-anchor='middle' fill='white'>LC</text></svg>">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+–bg-deep: #06080f;
+–bg-base: #0a0e17;
+–bg-card: #0c101a;
+–bg-elevated: #0f1424;
+–border: #1e3a5f22;
+–border-hover: #4a90d944;
+–primary: #1e3a5f;
+–accent: #4a90d9;
+–cta: #e67e22;
+–success: #22c55e;
+–danger: #ef4444;
+–purple: #8b5cf6;
+–text: #e2e8f0;
+–text-secondary: #94a3b8;
+–text-muted: #475569;
+–text-dim: #334155;
+}
+
+body {
+font-family: ‘Inter’, -apple-system, system-ui, sans-serif;
+background: var(–bg-deep);
+color: var(–text);
+height: 100vh;
+overflow: hidden;
+}
+
+.app {
+height: 100vh;
+display: flex;
+flex-direction: column;
+}
+
+/* ══════ TOP BAR ══════ */
+.topbar {
+background: linear-gradient(180deg, #0c1020, var(–bg-base));
+border-bottom: 1px solid var(–border);
+padding: 8px 16px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+flex-shrink: 0;
+z-index: 10;
+}
+
+.logo-group {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.logo-box {
+width: 34px; height: 34px; border-radius: 8px;
+background: linear-gradient(135deg, var(–primary), var(–accent));
+display: flex; align-items: center; justify-content: center;
+font-size: 14px; font-weight: 900; color: #fff;
+letter-spacing: -0.5px;
+}
+
+.logo-text h1 { font-size: 13px; font-weight: 900; color: #fff; letter-spacing: 0.5px; }
+.logo-text span { font-size: 9px; color: var(–accent); letter-spacing: 1.5px; font-weight: 700; }
+
+.controls {
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.badge {
+padding: 4px 10px; border-radius: 20px;
+font-size: 11px; font-weight: 600;
+display: flex; align-items: center; gap: 4px;
+transition: all 0.3s;
+}
+
+.sens-group { display: flex; gap: 2px; }
+.sens-btn {
+width: 20px; height: 20px; border-radius: 4px; border: none;
+font-size: 9px; font-weight: 700; cursor: pointer;
+transition: all 0.15s;
+}
+.sens-btn.active { background: var(–accent); color: #fff; }
+.sens-btn.inactive { background: #1e293b; color: var(–text-dim); }
+
+.toggle-btn {
+padding: 4px 12px; border-radius: 6px;
+border: 1px solid; font-size: 10px; font-weight: 700;
+cursor: pointer; transition: all 0.2s; background: transparent;
+}
+.toggle-btn.on { border-color: #4a90d944; color: var(–accent); background: #4a90d915; }
+.toggle-btn.off { border-color: #47556944; color: var(–text-muted); }
+
+/* ══════ PHASE TRACKER ══════ */
+.phases {
+display: flex; padding: 6px 16px; gap: 4px;
+border-bottom: 1px solid var(–border);
+background: rgba(10,14,23,0.6);
+flex-shrink: 0;
+}
+
+.phase-btn {
+flex: 1; padding: 6px 8px; border-radius: 6px;
+border: 1px solid transparent;
+background: transparent; color: var(–text-muted);
+font-size: 10px; font-weight: 700; cursor: pointer;
+display: flex; align-items: center; justify-content: center; gap: 4px;
+transition: all 0.2s; font-family: inherit;
+}
+.phase-btn.active {
+border-color: var(–phase-color, var(–accent));
+background: color-mix(in srgb, var(–phase-color, var(–accent)) 8%, transparent);
+color: var(–phase-color, var(–accent));
+}
+.phase-arrow { color: #1e293b; margin-left: 4px; }
+
+/* ══════ MAIN LAYOUT ══════ */
+.main {
+flex: 1; display: flex; overflow: hidden;
+}
+
+/* ══════ LEFT PANEL ══════ */
+.left {
+flex: 1; display: flex; flex-direction: column; min-width: 0;
+}
+
+.mic-bar {
+padding: 8px 16px;
+border-bottom: 1px solid var(–border);
+display: flex; align-items: center; gap: 10px;
+transition: background 0.3s;
+}
+.mic-bar.listening { background: #0a1a0a; border-color: #22c55e15; }
+
+.mic-btn {
+padding: 10px 22px; border-radius: 8px; border: none;
+color: #fff; font-size: 12px; font-weight: 800;
+cursor: pointer; display: flex; align-items: center; gap: 8px;
+font-family: inherit; transition: all 0.3s;
+}
+.mic-btn.start {
+background: linear-gradient(135deg, var(–primary), var(–accent));
+box-shadow: 0 0 24px #4a90d922;
+}
+.mic-btn.stop {
+background: linear-gradient(135deg, #b91c1c, #dc2626);
+box-shadow: 0 0 24px #dc262633;
+animation: pulse 2s infinite;
+}
+
+.live-indicator {
+display: flex; align-items: center; gap: 6px;
+}
+.wave-bars { display: flex; gap: 2px; align-items: center; }
+.wave-bar {
+width: 3px; border-radius: 2px; background: var(–success);
+animation: wave 1.2s ease-in-out infinite;
+}
+.live-label { font-size: 10px; color: var(–success); font-weight: 700; }
+.interim-text {
+font-size: 10px; color: var(–text-muted); font-style: italic;
+overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 350px;
+}
+
+.transcript-bar {
+margin: 0 16px; padding: 6px 10px; border-radius: 4px;
+background: var(–bg-card); border: 1px solid #1e3a5f15;
+max-height: 44px; overflow-y: auto;
+font-size: 10px; color: var(–text-muted); line-height: 1.5;
+}
+.transcript-label { color: var(–primary); font-weight: 700; }
+
+/* ══════ RESPONSE FEED ══════ */
+.feed {
+flex: 1; overflow-y: auto; padding: 10px 16px;
+display: flex; flex-direction: column; gap: 8px;
+}
+
+.empty-state {
+flex: 1; display: flex; flex-direction: column;
+align-items: center; justify-content: center;
+color: #1e293b; text-align: center; gap: 8px;
+}
+.empty-icon { font-size: 56px; opacity: 0.2; }
+.empty-title { font-size: 15px; font-weight: 800; color: var(–text-dim); }
+.empty-desc { font-size: 11px; max-width: 300px; line-height: 1.7; color: var(–text-muted); }
+
+.response-card {
+background: linear-gradient(135deg, var(–bg-card), var(–bg-elevated));
+border: 1px solid var(–border);
+border-left: 3px solid var(–card-accent, var(–accent));
+border-radius: 8px; padding: 12px;
+animation: fadeSlide 0.25s ease-out;
+}
+
+.card-header {
+display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;
+}
+.card-meta { display: flex; align-items: center; gap: 6px; font-size: 10px; }
+.card-category { font-weight: 700; }
+.card-badge {
+padding: 1px 5px; border-radius: 3px;
+font-size: 9px; font-weight: 700;
+}
+.card-time { color: var(–text-dim); }
+.card-actions { display: flex; gap: 4px; }
+.card-action-btn {
+background: none; border: none; cursor: pointer;
+font-size: 12px; opacity: 0.4; transition: opacity 0.2s;
+}
+.card-action-btn:hover { opacity: 1; }
+
+.card-trigger {
+font-size: 10px; color: var(–text-muted); margin-bottom: 8px;
+padding: 3px 8px; background: rgba(6,8,15,0.5);
+border-radius: 3px; border-left: 2px solid #1e293b;
+}
+
+.card-response {
+font-size: 12.5px; color: var(–text); line-height: 1.75; white-space: pre-wrap;
+}
+
+.power-move {
+margin-top: 8px; padding: 8px 12px;
+background: linear-gradient(135deg, #1e3a5f15, #4a90d910);
+border: 1px solid #4a90d933; border-radius: 6px;
+}
+.power-move-label {
+font-size: 9px; color: var(–accent); font-weight: 800;
+letter-spacing: 1px; margin-bottom: 3px;
+}
+.power-move-text {
+font-size: 13px; color: var(–accent); font-weight: 600; line-height: 1.5;
+}
+
+.processing {
+padding: 12px; display: flex; align-items: center; gap: 8px;
+}
+.dots { display: flex; gap: 3px; }
+.dot {
+width: 5px; height: 5px; border-radius: 50%;
+background: var(–accent); animation: bounce 1.4s infinite;
+}
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+.processing-text { font-size: 11px; color: var(–accent); }
+
+.error-msg {
+background: #dc262611; border: 1px solid #dc262622;
+border-radius: 6px; padding: 8px; font-size: 11px; color: #f87171;
+}
+
+/* ══════ INPUT BAR ══════ */
+.input-bar {
+padding: 8px 16px 10px;
+border-top: 1px solid #1e3a5f15;
+display: flex; gap: 6px;
+}
+
+.input-field {
+flex: 1; padding: 9px 12px; border-radius: 6px;
+border: 1px solid #1e3a5f33;
+background: var(–bg-card); color: var(–text);
+font-size: 12px; outline: none; font-family: inherit;
+transition: border-color 0.2s;
+}
+.input-field:focus { border-color: var(–accent); }
+.input-field::placeholder { color: #293548; }
+
+.send-btn {
+padding: 9px 18px; border-radius: 6px; border: none;
+font-size: 13px; font-weight: 800; cursor: pointer;
+font-family: inherit; transition: all 0.2s;
+}
+.send-btn.active {
+background: linear-gradient(135deg, var(–primary), var(–accent));
+color: #fff;
+}
+.send-btn.disabled { background: #1e293b; color: var(–text-dim); cursor: not-allowed; }
+
+/* ══════ RIGHT PANEL ══════ */
+.right {
+width: 330px; border-left: 1px solid var(–border);
+display: flex; flex-direction: column;
+background: #080c14; flex-shrink: 0;
+}
+
+.panel-tabs {
+display: flex; border-bottom: 1px solid var(–border);
+}
+.panel-tab {
+flex: 1; padding: 8px 4px; border: none;
+border-bottom: 2px solid transparent;
+background: transparent; color: var(–text-muted);
+font-size: 10px; font-weight: 700; cursor: pointer;
+display: flex; align-items: center; justify-content: center; gap: 3px;
+font-family: inherit; transition: all 0.2s;
+}
+.panel-tab.active {
+border-bottom-color: var(–accent);
+background: #4a90d908; color: var(–accent);
+}
+
+.panel-content {
+flex: 1; overflow-y: auto; padding: 10px;
+display: flex; flex-direction: column; gap: 6px;
+}
+
+.panel-header {
+font-size: 9px; color: var(–text-dim);
+letter-spacing: 1px; font-weight: 700;
+margin-bottom: 4px; padding-left: 4px;
+}
+
+.battle-card {
+padding: 10px 12px; border-radius: 8px;
+border: 1px solid var(–border);
+background: var(–bg-card); cursor: pointer;
+transition: all 0.15s; display: flex;
+align-items: center; gap: 8px; text-align: left;
+font-family: inherit; color: var(–text-secondary);
+}
+.battle-card:hover {
+background: #1e3a5f22; border-color: var(–border-hover);
+}
+.battle-emoji { font-size: 16px; flex-shrink: 0; }
+.battle-title { font-size: 12px; font-weight: 600; color: #cbd5e1; }
+.battle-triggers { font-size: 9px; color: var(–text-muted); font-weight: 400; margin-top: 2px; }
+
+.closing-card {
+padding: 10px 12px; border-radius: 8px;
+border: 1px solid #22c55e15;
+background: var(–bg-card); cursor: pointer;
+transition: all 0.15s; text-align: left; font-family: inherit;
+}
+.closing-card:hover { background: #22c55e0a; border-color: #22c55e33; }
+.closing-name { font-size: 12px; font-weight: 700; color: var(–success); margin-bottom: 3px; }
+.closing-when { font-size: 10px; color: var(–text-muted); line-height: 1.4; }
+
+.discovery-card {
+padding: 10px 12px; border-radius: 8px;
+border: 1px solid #8b5cf615;
+background: var(–bg-card); cursor: pointer;
+transition: all 0.15s; text-align: left;
+font-size: 11.5px; color: var(–text-secondary); line-height: 1.5;
+font-family: inherit;
+}
+.discovery-card:hover { background: #8b5cf60a; border-color: #8b5cf633; }
+.discovery-num { color: var(–purple); font-weight: 700; margin-right: 6px; }
+
+.info-box {
+margin-top: 10px; padding: 10px 12px; border-radius: 8px;
+}
+.info-box-title { font-size: 10px; font-weight: 700; margin-bottom: 4px; }
+.info-box-text { font-size: 11px; line-height: 1.5; }
+.info-box-text div { margin-bottom: 1px; }
+
+.pinned-card {
+padding: 8px 10px; border-radius: 6px;
+border: 1px solid #e67e2222;
+background: var(–bg-card); font-size: 11px; line-height: 1.5;
+}
+.pinned-header {
+display: flex; justify-content: space-between; margin-bottom: 4px;
+}
+.pinned-label { font-size: 9px; color: var(–cta); font-weight: 700; }
+.pinned-remove {
+background: none; border: none; color: var(–text-muted);
+cursor: pointer; font-size: 10px;
+}
+
+.empty-pinned {
+text-align: center; color: var(–text-dim);
+padding: 40px 20px; font-size: 12px;
+}
+
+/* ══════ SETUP OVERLAY ══════ */
+.setup-overlay {
+position: fixed; inset: 0; z-index: 100;
+background: rgba(6,8,15,0.95);
+display: flex; align-items: center; justify-content: center;
+backdrop-filter: blur(8px);
+}
+.setup-box {
+background: var(–bg-card); border: 1px solid var(–border);
+border-radius: 16px; padding: 40px; max-width: 460px; width: 90%;
+text-align: center;
+}
+.setup-logo {
+width: 56px; height: 56px; border-radius: 14px;
+background: linear-gradient(135deg, var(–primary), var(–accent));
+display: flex; align-items: center; justify-content: center;
+font-size: 22px; font-weight: 900; color: #fff;
+margin: 0 auto 16px;
+}
+.setup-title { font-size: 20px; font-weight: 900; margin-bottom: 6px; }
+.setup-sub { font-size: 12px; color: var(–text-muted); margin-bottom: 24px; line-height: 1.6; }
+.setup-label {
+font-size: 11px; font-weight: 700; color: var(–text-secondary);
+text-align: left; display: block; margin-bottom: 6px;
+}
+.setup-input {
+width: 100%; padding: 12px 14px; border-radius: 8px;
+border: 1px solid var(–border); background: var(–bg-deep);
+color: var(–text); font-size: 13px; font-family: monospace;
+outline: none; margin-bottom: 16px; transition: border 0.2s;
+}
+.setup-input:focus { border-color: var(–accent); }
+.setup-input::placeholder { color: #293548; }
+.setup-start {
+width: 100%; padding: 14px; border-radius: 10px; border: none;
+background: linear-gradient(135deg, var(–primary), var(–accent));
+color: #fff; font-size: 14px; font-weight: 800;
+cursor: pointer; font-family: inherit; transition: transform 0.15s, box-shadow 0.3s;
+box-shadow: 0 4px 24px #4a90d933;
+}
+.setup-start:hover { transform: translateY(-1px); box-shadow: 0 6px 30px #4a90d944; }
+.setup-hint {
+font-size: 10px; color: var(–text-dim); margin-top: 12px; line-height: 1.5;
+}
+
+/* ══════ ANIMATIONS ══════ */
+@keyframes pulse { 0%,100%{box-shadow:0 0 20px #dc262633} 50%{box-shadow:0 0 30px #dc262655} }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+@keyframes wave { 0%,100%{height:4px} 50%{height:14px} }
+@keyframes bounce { 0%,80%,100%{transform:scale(0)} 40%{transform:scale(1)} }
+@keyframes fadeSlide { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1e3a5f33; border-radius: 3px; }
+
+@media (max-width: 900px) {
+.right { width: 260px; }
+.interim-text { max-width: 200px; }
+}
+</style>
+
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- Setup Overlay -->
+  <div class="setup-overlay" id="setupOverlay">
+    <div class="setup-box">
+      <div class="setup-logo">LC</div>
+      <div class="setup-title">Sales Copilot</div>
+      <div class="setup-sub">
+        Dein KI-Assistent für Verkaufsgespräche.<br>
+        Hört mit, erkennt Einwände, liefert Antworten in Echtzeit.
+      </div>
+      <label class="setup-label">Anthropic API Key</label>
+      <input type="password" class="setup-input" id="apiKeyInput" placeholder="sk-ant-api03-..." onkeydown="if(event.key==='Enter')startApp()">
+      <button class="setup-start" id="startBtn" onclick="startApp()">🚀 Copilot starten</button>
+      <div class="setup-hint">
+        Der API Key wird nur lokal in deinem Browser gespeichert.<br>
+        Kein Server, keine Datenübermittlung an Dritte.
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Bar -->
+
+  <div class="topbar">
+    <div class="logo-group">
+      <div class="logo-box">LC</div>
+      <div class="logo-text">
+        <h1>SALES COPILOT</h1>
+        <span>ULTIMATE · CORPORATE LLM</span>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="badge" id="sentimentBadge" style="background:#94a3b815;border:1px solid #94a3b833;color:#94a3b8">
+        😐 Neutral
+      </div>
+      <div class="badge" id="timerBadge" style="background:#0f162899;border:1px solid #1e3a5f33;color:#64748b;font-family:monospace;display:none">
+        ⏱ 00:00
+      </div>
+      <div class="badge" id="objectionBadge" style="background:#e67e2215;border:1px solid #e67e2233;color:#e67e22">
+        🛡️ <span id="objectionCount">0</span>
+      </div>
+      <div class="sens-group" id="sensGroup"></div>
+      <button class="toggle-btn on" id="autoToggle" onclick="toggleAuto()">⚡AUTO</button>
+    </div>
+  </div>
+
+  <!-- Phase Tracker -->
+
+  <div class="phases" id="phasesBar"></div>
+
+  <!-- Main -->
+
+  <div class="main">
+    <!-- Left: Feed -->
+    <div class="left">
+      <div class="mic-bar" id="micBar">
+        <button class="mic-btn start" id="micBtn" onclick="toggleMic()">🎙️ MITHÖREN STARTEN</button>
+        <div class="live-indicator" id="liveIndicator" style="display:none">
+          <div class="wave-bars">
+            <div class="wave-bar" style="animation-delay:0s"></div>
+            <div class="wave-bar" style="animation-delay:0.1s"></div>
+            <div class="wave-bar" style="animation-delay:0.2s"></div>
+            <div class="wave-bar" style="animation-delay:0.3s"></div>
+            <div class="wave-bar" style="animation-delay:0.4s"></div>
+          </div>
+          <span class="live-label">LIVE</span>
+          <span class="interim-text" id="interimText"></span>
+        </div>
+      </div>
+      <div class="transcript-bar" id="transcriptBar" style="display:none">
+        <span class="transcript-label">📝</span> <span id="transcriptText"></span>
+      </div>
+      <div class="feed" id="feed">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">🎯</div>
+          <div class="empty-title">Bereit für den Call</div>
+          <div class="empty-desc">
+            Starte das <strong style="color:var(--accent)">Mithören</strong> für automatische Antworten
+            oder nutze die <strong style="color:var(--cta)">Battle Cards</strong> rechts
+          </div>
+        </div>
+      </div>
+      <div class="input-bar">
+        <input class="input-field" id="manualInput" placeholder="Einwand oder Frage eintippen..." onkeydown="if(event.key==='Enter')submitManual()">
+        <button class="send-btn disabled" id="sendBtn" onclick="submitManual()">➜</button>
+      </div>
+    </div>
+
+
+<!-- Right Panel -->
+<div class="right">
+  <div class="panel-tabs" id="panelTabs"></div>
+  <div class="panel-content" id="panelContent"></div>
+</div>
+
+
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════
+let apiKey = '';
+try { apiKey = localStorage.getItem('lc_api_key') || ''; } catch(e) {}
+let isListening = false;
+let autoMode = true;
+let sensitivity = 3;
+let currentPhase = 'opening';
+let activePanel = 'battlecards';
+let responses = [];
+let pinnedCards = [];
+let objectionCount = 0;
+let isProcessing = false;
+let transcript = '';
+let recognition = null;
+let buffer = '';
+let silenceTimer = null;
+let processedSet = new Set();
+let callStartTime = null;
+let callTimer = null;
+
+// ════════════════════════════════════════════════════════════
+// KNOWLEDGE BASE
+// ════════════════════════════════════════════════════════════
+const PHASES = [
+  { id:'opening', label:'Begrüßung', icon:'👋', color:'#4a90d9' },
+  { id:'discovery', label:'Bedarfsanalyse', icon:'🔍', color:'#8b5cf6' },
+  { id:'presentation', label:'Präsentation', icon:'🎯', color:'#e67e22' },
+  { id:'objection', label:'Einwände', icon:'🛡️', color:'#ef4444' },
+  { id:'closing', label:'Abschluss', icon:'🤝', color:'#22c55e' },
+];
+
+const OBJECTIONS = {
+  price: {
+    title:'💰 Preiseinwand',
+    triggers:['teuer','preis','kosten','budget','günstig','billig','geld','investition','leisten','zu viel','rabatt','nachlass','günstiger','preislich','kostet','euro','zahlen','sparen'],
+    response:Das verstehe ich – Investitionen wollen gut überlegt sein.\n\nEin Mitarbeiter kostet Sie mindestens 4.000-5.000€/Monat. Unser Corporate LLM spart jedem Mitarbeiter 5-10 Stunden pro Woche an repetitiven Aufgaben.\n\nBei 10 Mitarbeitern sind das 200 Stunden im Monat – umgerechnet ca. 2.500€ Ersparnis. ROI von 5:1 beim Basis-Paket.\n\nDie eigentliche Frage: Was kostet es Sie, NICHT zu automatisieren?,
+    powerMove:'Was wäre es Ihnen wert, wenn jeder Ihrer Mitarbeiter 5 Stunden pro Woche mehr für wertschöpfende Arbeit hätte?',
+  },
+  gdpr: {
+    title:'🔒 DSGVO / Datenschutz',
+    triggers:['dsgvo','datenschutz','daten','sicherheit','gdpr','server','hosting','eu','privacy','vertraulich','sensibel','compliance','konform','auftragsverarbeitung','avv','verschlüsselt','cloud'],
+    response:Absolut berechtigte Frage – und genau da unterscheiden wir uns fundamental:\n\n1. Alle Daten werden ausschließlich auf EU-Servern in Frankfurt verarbeitet\n2. Vollständiger AV-Vertrag inklusive\n3. Im Premium-Paket individuelle Datenschutz-Folgenabschätzung\n\nWir sind ein deutsches Unternehmen – Datenschutz ist für uns Kernkompetenz, nicht Pflichtübung.,
+    powerMove:'Möchten Sie unseren AV-Vertrag vorab von Ihrem Datenschutzbeauftragten prüfen lassen? Ich schicke ihn direkt nach dem Call.',
+  },
+  noNeed: {
+    title:'🤔 Kein Bedarf',
+    triggers:['brauchen wir nicht','kein bedarf','funktioniert auch so','kommen zurecht','nicht nötig','überflüssig','unnötig','passt schon','läuft doch','haben genug','geht auch ohne'],
+    response:Das respektiere ich. Darf ich eine ehrliche Frage stellen?\n\nWie viel Zeit verbringt Ihr Team pro Woche mit E-Mails, Dokumenten-Zusammenfassungen, Recherche oder Protokollen? In der Regel sind das 20-30% der Arbeitszeit.\n\nUnsere Kunden sagen nach 4 Wochen: "Wie haben wir das vorher ohne gemacht?" Nicht weil sie es nicht konnten – sondern weil sie nicht wussten, wie viel schneller es geht.,
+    powerMove:'Welche Aufgabe in Ihrem Team frisst die meiste Zeit? Lassen Sie mich genau DAFÜR eine Demo zeigen.',
+  },
+  time: {
+    title:'⏰ Keine Zeit / Aufwand',
+    triggers:['keine zeit','aufwand','schulung','einarbeitung','implementation','umstellung','dauert','kompliziert','aufwendig','ressourcen','kapazität','stress','überlastet'],
+    response:Genau DAS ist unser Kernversprechen: Wir nehmen Ihnen den gesamten Aufwand ab.\n\nSLA: Go-Live in max. 7 Tagen. Wir richten alles ein, konfigurieren Prompts für Ihre Branche, laden Ihre Dokumente hoch und schulen Ihr Team. Die Schulung dauert 2 Stunden – danach kann jeder loslegen.\n\nSie investieren 2 Stunden und sparen danach 5-10h pro Woche pro Mitarbeiter. Bester Trade der Woche.,
+    powerMove:'Wann hätten Sie 30 Minuten für eine Live-Demo? Dann zeige ich in Echtzeit, wie einfach das Setup ist.',
+  },
+  competition: {
+    title:'🏢 Hat schon ChatGPT',
+    triggers:['chatgpt','openai','copilot','microsoft','google','gemini','schon ein tool','nutzen bereits','haben schon','alternative','konkurrenz','vergleich','ki tool'],
+    response:Gut, dass Sie Erfahrung mit KI haben – das macht es einfacher!\n\nDer Unterschied: ChatGPT & Co. sind Consumer-Tools. Jeder nutzt sie anders, ohne Kontrolle, ohne DSGVO-Konformität, ohne Unternehmensdaten.\n\nUnser Corporate LLM ist wie der Unterschied zwischen privatem WhatsApp und einem professionellen CRM: Zentral verwaltet, mit Ihrem Firmenwissen gefüttert, DSGVO-konform, branchenspezifische Prompts die sofort Ergebnisse liefern.,
+    powerMove:'Wissen Sie, ob Ihre Mitarbeiter gerade sensible Firmendaten in ChatGPT eingeben? Das ist eine echte DSGVO-Zeitbombe.',
+  },
+  trust: {
+    title:'🤨 Vertrauensbedenken',
+    triggers:['kennen wir nicht','wer seid ihr','referenz','erfahrung','wie lange','klein','startup','risiko','seriös','beweis','nachweis','track record','unbekannt'],
+    response:Berechtigte Frage – Sie sollten wissen, mit wem Sie arbeiten.\n\nLaneCore AI: Deutsches Unternehmen aus Ellwangen, Baden-Württemberg. Gründer Benjamin Kurz, über 18 Jahre Führungserfahrung.\n\nWichtig: Wir sind offizieller Technologie-Partner des DEMV – Deutscher Maklerverbund mit 7.200+ Mitgliedern. Diese Partnerschaft gibt's nicht ohne gründliche Prüfung.\n\nUnd: Sie riskieren nichts. 4 Wochen PoC kostenlos. Erst wenn SIE überzeugt sind, sprechen wir über Vertrag.,
+    powerMove:'Starten wir den kostenlosen 4-Wochen-Test – dann können Sie selbst urteilen statt auf Versprechen zu vertrauen.',
+  },
+  contract: {
+    title:'📝 Vertragsbindung',
+    triggers:['vertrag','bindung','laufzeit','kündigung','kündigen','monatlich','jährlich','verpflichtung','commitment','langfristig','flexibel','frist'],
+    response:Volle Flexibilität – das Basis-Paket ist monatlich kündbar. Keine Mindestlaufzeit, kein Risiko.\n\nBeim Premium empfehlen wir 12 Monate wegen der intensiveren Einrichtung. Aber: Wenn nach dem PoC das Ergebnis nicht stimmt, null Kosten.\n\nWir binden Kunden durch Leistung, nicht durch Verträge.,
+    powerMove:'Starten Sie mit dem Basis-Paket – monatlich kündbar. Wenn der ROI stimmt, upgraden Sie jederzeit.',
+  },
+  aiSkepticism: {
+    title:'🤖 KI-Skepsis',
+    triggers:['ki ersetzt','arbeitsplätze','künstliche intelligenz','fehler','halluzination','falsch','ungenau','vertrauen','maschine','automatisch','gefährlich','angst','ersetzen','job'],
+    response:Wichtiger Punkt – und ich bin 100% ehrlich: KI ist ein Werkzeug, kein Ersatz für Menschen.\n\nGenau wie Excel den Buchhalter nicht ersetzt hat, sondern ihm Superkräfte gab. Unser LLM macht Mitarbeiter schneller und besser.\n\nWegen Genauigkeit: Wir konfigurieren Claude speziell für Ihre Branche, mit Ihren Dokumenten als Wissensbasis. Für kritische Entscheidungen bleibt immer ein Mensch in der Schleife.,
+    powerMove:'Welche Aufgabe in Ihrem Unternehmen ist am meisten repetitiv aber braucht Genauigkeit? Genau da zeigt KI den größten Hebel.',
+  },
+  decisionMaker: {
+    title:'👔 Nicht der Entscheider',
+    triggers:['entscheider','chef','geschäftsführ','vorgesetzt','besprechen','abstimmen','alleine entscheiden','gremium','board','rücksprache','team fragen','genehmigung'],
+    response:Absolut verständlich – solche Entscheidungen trifft man nicht allein.\n\nVorschlag: Wir erstellen eine maßgeschneiderte ROI-Berechnung mit Ihren konkreten Zahlen. Die können Sie direkt vorlegen.\n\nOder noch besser: 15-Minuten Demo-Call mit Ihrem Geschäftsführer dabei. Wenn er sieht, was das Tool in Echtzeit kann, verkauft es sich praktisch von selbst.,
+    powerMove:'Soll ich eine Executive Summary vorbereiten? Oder buchen wir gleich einen Termin mit Ihrem Geschäftsführer?',
+  },
+  technical: {
+    title:'⚙️ Technische Bedenken',
+    triggers:['integration','schnittstelle','api','software','kompatibel','system','erp','sap','crm','technisch','infrastruktur','it-abteilung','admin','installation'],
+    response:Das Corporate LLM läuft browserbasiert – Ihre Mitarbeiter brauchen nur Browser und Internet. Keine Installation, kein IT-Aufwand.\n\nFür erweiterte Integrationen (ERP, CRM) bieten wir im Premium-Paket API-Anbindungen und Custom-Workflows.\n\nIhre IT wird begeistert sein: Kein Maintenance, kein Server-Management, automatische Updates. Wir kümmern uns um alles.,
+    powerMove:'Soll ich mit Ihrer IT-Abteilung sprechen? Meistens 10 Minuten und alle Fragen sind geklärt.',
+  },
+  waitAndSee: {
+    title:'⏳ Abwarten',
+    triggers:['später','nächstes jahr','erst mal','überlegen','abwarten','noch nicht','vielleicht','mal sehen','irgendwann','nicht jetzt','zukunft','warten','rush','eile'],
+    response:Verstehe ich – aber ein Gedanke:\n\nJede Woche verbrennt Ihr Team 20-30% Arbeitszeit mit Aufgaben, die eine KI in Sekunden erledigt. Bei 10 Mitarbeitern: ca. 600€ pro Woche, 2.400€ im Monat.\n\nIhre Konkurrenz wartet nicht. Unternehmen, die jetzt auf KI setzen, bauen einen Vorsprung auf, der in 12 Monaten kaum aufzuholen ist.\n\nUnd: Null Risiko mit dem 4-Wochen-PoC.,
+    powerMove:'Was hindert Sie konkret, zumindest den kostenlosen Test zu starten? In 4 Wochen wissen Sie es – ganz ohne Risiko.',
+  },
+  badExperience: {
+    title:'😤 Schlechte Erfahrung',
+    triggers:['schon probiert','nicht funktioniert','enttäuscht','schlechte erfahrung','letztes mal','andere anbieter','versprochen','nie wieder','betrug','abzocke'],
+    response:Das tut mir leid – und die Skepsis verstehe ich völlig.\n\nDarf ich fragen, was genau schief lief? Meistens scheitern KI-Projekte an zwei Dingen: Fehlende Branchenkonfiguration und fehlendes Onboarding.\n\nGenau deshalb sind wir anders: Wir sind kein Software-Verkäufer. Wir richten alles ein, trainieren die KI mit Ihrem Fachwissen und schulen Ihr Team.\n\nWenn nach 4 Wochen PoC das Ergebnis nicht stimmt – null Kosten.,
+    powerMove:'Was müsste passieren, damit Sie überzeugt wären? Genau DAS machen wir im Proof of Concept messbar.',
+  },
+  tooSmall: {
+    title:'🏪 Zu klein für sowas',
+    triggers:['zu klein','wenige mitarbeiter','alleine','solo','einzelkämpfer','klein','einmann','freelancer','selbstständig'],
+    response:Gerade für kleinere Teams ist der Hebel GRÖSSER!\n\nBasis-Paket: 499€/Monat für bis zu 10 User – weniger als ein Mini-Job. Wenn 5 Leute jeweils 5 Stunden sparen, ist das wie ein zusätzlicher Mitarbeiter.\n\nWir sind aus Ostwürttemberg und verstehen den Mittelstand. Kein Silicon-Valley-Gehabe, pragmatische Lösungen die funktionieren.,
+    powerMove:'Gerade WEIL Ihr Team schlank ist, zählt jede Stunde doppelt. Welche 3 Prozesse hätten den größten Hebel?',
+  },
+  industryFit: {
+    title:'🏭 Passt nicht zur Branche',
+    triggers:['unsere branche','speziell','anders','besonders','nicht vergleichbar','nische','fachspezifisch','andere anforderungen','bei uns anders'],
+    response:Das höre ich oft – und genau da liegt unser Vorteil. Wir liefern KEIN Standard-Tool ab.\n\nIm Onboarding analysieren wir Ihre Workflows und konfigurieren die KI exakt für Ihre Branche. Wir laden Ihre Fachdokumente, Vorlagen und Prozessbeschreibungen in die Knowledge Base.\n\nErgebnis: Eine KI, die IHRE Fachsprache spricht und IHRE Prozesse kennt. Kein generisches ChatGPT – ein maßgeschneiderter digitaler Mitarbeiter.,
+    powerMove:'Welches Dokument oder welcher Prozess ist bei Ihnen am komplexesten? Genau das zeige ich im PoC.',
+  },
+};
+
+const CLOSINGS = [
+  { name:'Alternativ-Close', text:'Möchten Sie mit dem Basis-Paket starten oder macht das Premium-Paket für Ihre Teamgröße mehr Sinn?', when:'Kunde ist grundsätzlich interessiert' },
+  { name:'PoC-Close', text:'Lassen Sie uns den kostenlosen 4-Wochen-Test starten – Sie sehen den Mehrwert und wir besprechen danach in Ruhe die Optionen. Wann solls losgehen?', when:'Kunde zögert noch' },
+  { name:'Urgency-Close', text:'Aktuell haben wir noch Onboarding-Kapazität diese Woche. Soll ich Ihnen einen Platz reservieren?', when:'Kunde braucht einen Schubs' },
+  { name:'Summary-Close', text:'Zusammengefasst: Sie sparen X Stunden/Woche, Daten bleiben DSGVO-konform in Deutschland, monatlich kündbar. Wollen wir starten?', when:'Nach erfolgreicher Präsentation' },
+  { name:'Referenz-Close', text:'Ich kann Sie mit einem Kunden aus Ihrer Branche verbinden – aus erster Hand hören, wie der Umstieg war.', when:'Kunde will Social Proof' },
+  { name:'Next-Step-Close', text:'Was ist der nächste logische Schritt? Soll ich den PoC-Vertrag schicken, oder möchten Sie erst mit Ihrem Team sprechen?', when:'Gespräch neigt sich dem Ende' },
+];
+
+const DISCOVERY = [
+  'Wie viele Mitarbeiter arbeiten regelmäßig mit Texten und Dokumenten?',
+  'Welche wiederkehrenden Aufgaben fressen bei Ihrem Team die meiste Zeit?',
+  'Nutzen Ihre Mitarbeiter aktuell schon KI-Tools – auch privat im Berufsalltag?',
+  'Was wäre für Sie der ideale erste Use Case?',
+  'Wie sieht Ihr aktueller Prozess für [Branchenspezifisch] aus?',
+  'Wer entscheidet bei Ihnen über neue Software-Investitionen?',
+  'Haben Sie einen IT-Dienstleister oder interne IT?',
+  'Was wäre messbarer Erfolg nach 3 Monaten?',
+];
+
+const SENTIMENT_MAP = {
+  buying:  { color:'#22c55e', bg:'#22c55e15', icon:'🔥', label:'KAUFSIGNAL' },
+  positive:{ color:'#4ade80', bg:'#4ade8015', icon:'😊', label:'Positiv' },
+  warm:    { color:'#a3e635', bg:'#a3e63515', icon:'🙂', label:'Warm' },
+  neutral: { color:'#94a3b8', bg:'#94a3b815', icon:'😐', label:'Neutral' },
+  cool:    { color:'#f59e0b', bg:'#f59e0b15', icon:'🤨', label:'Kühl' },
+  negative:{ color:'#ef4444', bg:'#ef444415', icon:'😟', label:'Negativ' },
+};
+
+const SYSTEM_PROMPT = `Du bist der Elite-Sales-Copilot von LaneCore AI. Du unterstützt Eray in Echtzeit im Videocall.
+
+REGELN:
+- IMMER Deutsch
+- EXTREM KURZ (2-4 Sätze max!)
+- Starte mit Emoji für die Kategorie
+- Ende IMMER mit "➜ SAG DAS:" + wörtlicher Satz
+- "SKIP" falls irrelevant
+- Verkaufsstark aber nie unseriös
+
+PRODUKT: Corporate LLM (Basis 499€/M 10 User, Premium 999€/M 50 User). DSGVO EU-Frankfurt. PoC 4 Wochen gratis. Go-Live ≤7 Tage. Support ≤4h. DEMV-Partner 7.200 Makler. ROI 5:1+. Julia Telefonassistentin ab 149€/M.`;
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+function startApp() {
+  try {
+    const input = document.getElementById('apiKeyInput');
+    const key = input ? input.value.trim() : '';
+    if (!key) { 
+      if (input) input.style.borderColor = '#ef4444'; 
+      return; 
+    }
+    apiKey = key;
+    try { localStorage.setItem('lc_api_key', key); } catch(e) {}
+    document.getElementById('setupOverlay').style.display = 'none';
+  } catch(e) {
+    alert('Fehler beim Starten: ' + e.message);
+  }
+}
+
+try {
+  if (apiKey) document.getElementById('setupOverlay').style.display = 'none';
+  else { var inp = document.getElementById('apiKeyInput'); if(inp) inp.focus(); }
+} catch(e) {}
+
+// Build UI
+function buildPhases() {
+  const bar = document.getElementById('phasesBar');
+  bar.innerHTML = PHASES.map((p,i) => `
+    <button class="phase-btn ${p.id===currentPhase?'active':''}" style="--phase-color:${p.color}" onclick="setPhase('${p.id}')">
+      <span>${p.icon}</span><span>${p.label}</span>${i<PHASES.length-1?'<span class="phase-arrow">→</span>':''}
+    </button>`).join('');
+}
+
+function buildSensitivity() {
+  const g = document.getElementById('sensGroup');
+  g.innerHTML = [1,2,3,4,5].map(n => <button class="sens-btn ${n<=sensitivity?'active':'inactive'}" onclick="setSensitivity(${n})">${n}</button>).join('');
+}
+
+function buildPanelTabs() {
+  const tabs = [
+    { id:'battlecards', icon:'🛡️', label:'Battle Cards' },
+    { id:'closing', icon:'🤝', label:'Closing' },
+    { id:'discovery', icon:'🔍', label:'Fragen' },
+    { id:'pinned', icon:'📌', label:pinnedCards.length.toString() },
+  ];
+  document.getElementById('panelTabs').innerHTML = tabs.map(t =>
+    <button class="panel-tab ${t.id===activePanel?'active':''}" onclick="setPanel('${t.id}')">${t.icon} ${t.label}</button>
+  ).join('');
+}
+
+function buildPanelContent() {
+  const el = document.getElementById('panelContent');
+  if (activePanel === 'battlecards') {
+    el.innerHTML = <div class="panel-header">KLICKE AUF EINEN EINWAND FÜR DIE ANTWORT</div> +
+      Object.entries(OBJECTIONS).map(([k,o]) => `
+        <button class="battle-card" onclick="fireBattleCard('${k}')">
+          <span class="battle-emoji">${o.title.split(' ')[0]}</span>
+          <div>
+            <div class="battle-title">${o.title.split(' ').slice(1).join(' ')}</div>
+            <div class="battle-triggers">${o.triggers.slice(0,4).join(', ')}...</div>
+          </div>
+        </button>`).join('');
+  } else if (activePanel === 'closing') {
+    el.innerHTML = <div class="panel-header">CLOSING-TECHNIKEN</div> +
+      CLOSINGS.map((c,i) => `
+        <button class="closing-card" onclick="fireClosing(${i})">
+          <div class="closing-name">🤝 ${c.name}</div>
+          <div class="closing-when">${c.when}</div>
+        </button>`).join('') +
+      `<div class="info-box" style="background:#e67e2208;border:1px solid #e67e2222">
+        <div class="info-box-title" style="color:#e67e22">💡 PREISANKER</div>
+        <div class="info-box-text" style="color:#94a3b8">
+          <div>• <b>Basis:</b> ab 499€/M (bis 10 User)</div>
+          <div>• <b>Premium:</b> ab 999€/M (bis 50 User)</div>
+          <div>• <b>DEMV-Rabatt:</b> 20% für 3 Monate</div>
+          <div>• <b>PoC:</b> 4 Wochen kostenlos</div>
+          <div style="margin-top:4px;color:#e67e22;font-weight:600">Immer mit Premium starten → auf Basis "runtergehen" = Ankereffekt!</div>
+        </div>
+      </div>`;
+  } else if (activePanel === 'discovery') {
+    el.innerHTML = <div class="panel-header">BEDARFSANALYSE – FRAGEN FÜR DEN KUNDEN</div> +
+      DISCOVERY.map((q,i) => {
+        const escaped = q.replace(/'/g, '&#39;');
+        return '<button class="discovery-card" onclick="copyDiscovery(' + i + ')">' +
+          '<span class="discovery-num">' + (i+1) + '.</span>' + escaped +
+        '</button>';
+      }).join('') +
+      `<div class="info-box" style="background:#8b5cf608;border:1px solid #8b5cf622">
+        <div class="info-box-title" style="color:#8b5cf6">🎯 SPIN-Selling</div>
+        <div class="info-box-text" style="color:#64748b">
+          <div><b style="color:#94a3b8">S</b>ituation → Wie arbeiten Sie aktuell?</div>
+          <div><b style="color:#94a3b8">P</b>roblem → Wo klemmt es?</div>
+          <div><b style="color:#94a3b8">I</b>mplication → Was kostet das Problem?</div>
+          <div><b style="color:#94a3b8">N</b>eed-Payoff → Idealer Zustand?</div>
+        </div>
+      </div>`;
+  } else if (activePanel === 'pinned') {
+    if (!pinnedCards.length) {
+      el.innerHTML = <div class="empty-pinned">📌 Noch keine Karten gepinnt<br><span style="font-size:10px">Klicke 📌 bei einer Antwort</span></div>;
+    } else {
+      el.innerHTML = pinnedCards.map((r,i) => `
+        <div class="pinned-card">
+          <div class="pinned-header">
+            <span class="pinned-label">${r.category||'📌 Gepinnt'}</span>
+            <button class="pinned-remove" onclick="removePin(${i})">✕</button>
+          </div>
+          ${r.powerMove ? <div style="color:var(--accent);font-weight:600">➜ ${r.powerMove}</div> : <div style="color:#94a3b8">${r.response.slice(0,120)}...</div>}
+        </div>`).join('');
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// ACTIONS
+// ════════════════════════════════════════════════════════════
+function setPhase(id) { currentPhase = id; buildPhases(); }
+function setSensitivity(n) { sensitivity = n; buildSensitivity(); }
+function setPanel(id) { activePanel = id; buildPanelTabs(); buildPanelContent(); }
+function toggleAuto() {
+  autoMode = !autoMode;
+  const btn = document.getElementById('autoToggle');
+  btn.className = toggle-btn ${autoMode?'on':'off'};
+  btn.textContent = autoMode ? '⚡AUTO' : '✋MAN';
+}
+
+function removePin(i) { pinnedCards.splice(i,1); buildPanelContent(); buildPanelTabs(); }
+
+function updateSentiment(s) {
+  const c = SENTIMENT_MAP[s] || SENTIMENT_MAP.neutral;
+  const el = document.getElementById('sentimentBadge');
+  el.style.background = c.bg;
+  el.style.borderColor = c.color+'33';
+  el.style.color = c.color;
+  el.innerHTML = ${c.icon} ${c.label};
+}
+
+function updateObjCount() {
+  document.getElementById('objectionCount').textContent = objectionCount;
+}
+
+function detectSentiment(text) {
+  const l = text.toLowerCase();
+  const pos = ['gut','interessant','spannend','ja','genau','stimmt','okay','klingt gut','super','toll','gerne','einverstanden','perfekt','verstehe','logisch','macht sinn','auf jeden fall'];
+  const neg = ['nein','nicht','teuer','problem','schwierig','aber','leider','bedenken','angst','unsicher','skeptisch','schlecht','enttäuscht','egal','weiß nicht'];
+  const buy = ['wann','wie schnell','starten','anfangen','los','vertrag','bestellen','buchen','termin','nächste schritte','loslegen','anfangen'];
+  let score = 0;
+  pos.forEach(w => { if(l.includes(w)) score++; });
+  neg.forEach(w => { if(l.includes(w)) score--; });
+  if (buy.some(w => l.includes(w))) return 'buying';
+  if (score >= 2) return 'positive';
+  if (score <= -2) return 'negative';
+  if (score === 1) return 'warm';
+  if (score === -1) return 'cool';
+  return 'neutral';
+}
+
+function detectLocalObjection(text) {
+  const l = text.toLowerCase();
+  for (const [k,o] of Object.entries(OBJECTIONS)) {
+    for (const t of o.triggers) {
+      if (l.includes(t)) return { key:k, ...o };
+    }
+  }
+  return null;
+}
+
+// ════════════════════════════════════════════════════════════
+// RESPONSE RENDERING
+// ════════════════════════════════════════════════════════════
+function addResponse(r) {
+  responses.push(r);
+  objectionCount++;
+  updateObjCount();
+  
+  const empty = document.getElementById('emptyState');
+  if (empty) empty.remove();
+  
+  const feed = document.getElementById('feed');
+  const accentColor = r.source === 'instant' || r.source === 'battlecard' ? '#e67e22' : r.source === 'ai' ? '#4a90d9' : '#8b5cf6';
+  const sourceLabel = { instant:'INSTANT', ai:'AI', manual:'MANUELL', battlecard:'BATTLE CARD', closing:'CLOSING' }[r.source] || '';
+  const sourceBg = { instant:'#e67e2222', ai:'#4a90d922', manual:'#8b5cf622', battlecard:'#e67e2222', closing:'#22c55e22' }[r.source] || '#4a90d922';
+  const sourceColor = { instant:'#e67e22', ai:'#4a90d9', manual:'#8b5cf6', battlecard:'#e67e22', closing:'#22c55e' }[r.source] || '#4a90d9';
+  const sentC = SENTIMENT_MAP[r.sentiment] || SENTIMENT_MAP.neutral;
+  
+  const card = document.createElement('div');
+  card.className = 'response-card';
+  card.style.setProperty('--card-accent', accentColor);
+  
+  card.innerHTML = `
+    <div class="card-header">
+      <div class="card-meta">
+        ${r.category ? <span class="card-category" style="color:${accentColor}">${r.category}</span> : ''}
+        <span class="card-badge" style="background:${sourceBg};color:${sourceColor}">${sourceLabel}</span>
+        <span class="card-time">${r.time}</span>
+        ${r.sentiment ? <span style="font-size:12px">${sentC.icon}</span> : ''}
+      </div>
+      <div class="card-actions">
+        <button class="card-action-btn" onclick='pinCard(${responses.length-1})' title="Pinnen">📌</button>
+        <button class="card-action-btn" onclick='copyCard(${responses.length-1})' title="Kopieren">📋</button>
+      </div>
+    </div>
+    <div class="card-trigger">„${escHtml(r.trigger)}"</div>
+    <div class="card-response">${escHtml(r.response)}</div>
+    ${r.powerMove ? `
+      <div class="power-move">
+        <div class="power-move-label">➜ SAG DAS:</div>
+        <div class="power-move-text">${escHtml(r.powerMove)}</div>
+      </div>` : ''}
+  `;
+  feed.appendChild(card);
+  card.scrollIntoView({ behavior: 'smooth' });
+}
+
+function escHtml(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+function pinCard(i) {
+  if (responses[i]) { pinnedCards.push(responses[i]); buildPanelTabs(); if(activePanel==='pinned') buildPanelContent(); }
+}
+function copyCard(i) {
+  if (!responses[i]) return;
+  const r = responses[i];
+  navigator.clipboard.writeText(r.response + (r.powerMove ? '\n\n➜ SAG DAS: '+r.powerMove : ''));
+}
+
+function showProcessing(show) {
+  let el = document.getElementById('processingIndicator');
+  if (show && !el) {
+    el = document.createElement('div');
+    el.id = 'processingIndicator';
+    el.className = 'processing';
+    el.innerHTML = '<div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="processing-text">Analysiere...</span>';
+    document.getElementById('feed').appendChild(el);
+    el.scrollIntoView({ behavior:'smooth' });
+  } else if (!show && el) {
+    el.remove();
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// AI CALL
+// ════════════════════════════════════════════════════════════
+async function callAI(text, isManual) {
+  if (isProcessing) return;
+  isProcessing = true;
+  showProcessing(true);
+  
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'x-api-key': apiKey, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: [{ role:'user', content: isManual
+          ? Eray braucht jetzt Hilfe:\n"${text}"\nPhase: ${currentPhase}
+          : Live aus dem Call:\n"${text}"\nPhase: ${currentPhase}\n\nAntwort oder SKIP.
+        }],
+      }),
+    });
+    const data = await res.json();
+    const answer = (data.content && data.content[0] && data.content[0].text) || '';
+    
+    if (answer.trim() !== 'SKIP' && answer.trim()) {
+      const pmMatch = answer.match(/➜\s*SAG DAS:\s*(.*)/s);
+      addResponse({
+        trigger: text.slice(0,150),
+        response: pmMatch ? answer.slice(0, pmMatch.index).trim() : answer,
+        powerMove: pmMatch ? pmMatch[1].trim() : null,
+        category: null,
+        time: new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),
+        source: isManual ? 'manual' : 'ai',
+        sentiment: detectSentiment(text),
+      });
+    }
+  } catch (err) {
+    const feed = document.getElementById('feed');
+    const errEl = document.createElement('div');
+    errEl.className = 'error-msg';
+    errEl.textContent = 'API-Fehler: ' + err.message;
+    feed.appendChild(errEl);
+  } finally {
+    isProcessing = false;
+    showProcessing(false);
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// LIVE SPEECH
+// ════════════════════════════════════════════════════════════
+function processBuffer(text) {
+  const sentiment = detectSentiment(text);
+  updateSentiment(sentiment);
+  
+  const local = detectLocalObjection(text);
+  if (local) {
+    currentPhase = 'objection';
+    buildPhases();
+    addResponse({
+      trigger: text.slice(0,150),
+      response: local.response,
+      powerMove: local.powerMove,
+      category: local.title,
+      time: new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),
+      source: 'instant',
+      sentiment,
+    });
+    return;
+  }
+  
+  if (sentiment === 'buying') {
+    currentPhase = 'closing';
+    buildPhases();
+    addResponse({
+      trigger: text.slice(0,150),
+      response: '🚀 KAUFSIGNAL ERKANNT! Der Kunde zeigt Interesse. Jetzt den Sack zumachen!',
+      powerMove: 'Sehr gut, lassen Sie uns den nächsten Schritt festlegen. Passt Ihnen diese Woche für den Start des Proof of Concept?',
+      category: '🚀 Kaufsignal',
+      time: new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),
+      source: 'instant',
+      sentiment: 'buying',
+    });
+    return;
+  }
+  
+  if (autoMode) callAI(text, false);
+}
+
+function toggleMic() {
+  if (isListening) stopMic();
+  else startMic();
+}
+
+function startMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('Spracherkennung nicht verfügbar – bitte Chrome nutzen!'); return; }
+  
+  recognition = new SR();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'de-DE';
+  
+  recognition.onresult = (event) => {
+    let interim = '', final = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const t = event.results[i][0].transcript;
+      if (event.results[i].isFinal) final += t + ' ';
+      else interim += t;
+    }
+    if (interim) document.getElementById('interimText').textContent = interim;
+    if (final.trim()) {
+      document.getElementById('interimText').textContent = '';
+      buffer += final;
+      transcript += final;
+      const tb = document.getElementById('transcriptBar');
+      tb.style.display = 'block';
+      document.getElementById('transcriptText').textContent = transcript.slice(-300);
+      
+      if (silenceTimer) clearTimeout(silenceTimer);
+      const delay = [5000,4000,3000,2000,1500][sensitivity-1] || 3000;
+      silenceTimer = setTimeout(() => {
+        const buf = buffer.trim();
+        if (buf && buf.split(' ').length >= 3 && !processedSet.has(buf)) {
+          processedSet.add(buf);
+          processBuffer(buf);
+        }
+        buffer = '';
+      }, delay);
+    }
+  };
+  
+  recognition.onerror = (e) => { if(e.error!=='no-speech') console.error('Speech error:',e.error); };
+  recognition.onend = () => { if(isListening) try{recognition.start();}catch(e){} };
+  
+  recognition.start();
+  isListening = true;
+  
+  const btn = document.getElementById('micBtn');
+  btn.className = 'mic-btn stop';
+  btn.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1s infinite;display:inline-block"></span> STOP';
+  document.getElementById('micBar').classList.add('listening');
+  document.getElementById('liveIndicator').style.display = 'flex';
+  
+  if (!callStartTime) {
+    callStartTime = Date.now();
+    document.getElementById('timerBadge').style.display = 'flex';
+    callTimer = setInterval(() => {
+      const s = Math.floor((Date.now()-callStartTime)/1000);
+      document.getElementById('timerBadge').innerHTML = ⏱ ${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')};
+    }, 1000);
+  }
+}
+
+function stopMic() {
+  if (recognition) { recognition.onend = null; recognition.stop(); }
+  if (silenceTimer) clearTimeout(silenceTimer);
+  isListening = false;
+  
+  const btn = document.getElementById('micBtn');
+  btn.className = 'mic-btn start';
+  btn.innerHTML = '🎙️ MITHÖREN STARTEN';
+  document.getElementById('micBar').classList.remove('listening');
+  document.getElementById('liveIndicator').style.display = 'none';
+  document.getElementById('interimText').textContent = '';
+}
+
+// ════════════════════════════════════════════════════════════
+// BATTLE CARDS & CLOSINGS
+// ════════════════════════════════════════════════════════════
+function fireBattleCard(key) {
+  const o = OBJECTIONS[key];
+  if (!o) return;
+  currentPhase = 'objection'; buildPhases();
+  addResponse({
+    trigger: o.title,
+    response: o.response,
+    powerMove: o.powerMove,
+    category: o.title,
+    time: new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),
+    source: 'battlecard',
+    sentiment: 'neutral',
+  });
+}
+
+function fireClosing(i) {
+  const c = CLOSINGS[i];
+  if (!c) return;
+  currentPhase = 'closing'; buildPhases();
+  addResponse({
+    trigger: c.name,
+    response: 🤝 ${c.name}\n\n${c.when},
+    powerMove: c.text,
+    category: '🤝 Closing',
+    time: new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),
+    source: 'closing',
+    sentiment: 'buying',
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// MANUAL INPUT
+// ════════════════════════════════════════════════════════════
+const inputField = document.getElementById('manualInput');
+const sendBtn = document.getElementById('sendBtn');
+inputField.addEventListener('input', () => {
+  const hasText = inputField.value.trim().length > 0;
+  sendBtn.className = send-btn ${hasText && !isProcessing ? 'active' : 'disabled'};
+});
+
+function submitManual() {
+  const text = inputField.value.trim();
+  if (!text || isProcessing) return;
+  inputField.value = '';
+  sendBtn.className = 'send-btn disabled';
+  callAI(text, true);
+}
+
+function copyDiscovery(i) {
+  if (DISCOVERY[i]) navigator.clipboard.writeText(DISCOVERY[i]);
+}
+
+// ════════════════════════════════════════════════════════════
+// BOOT
+// ════════════════════════════════════════════════════════════
+try {
+  buildPhases();
+  buildSensitivity();
+  buildPanelTabs();
+  buildPanelContent();
+  // Backup event listener
+  document.getElementById('startBtn').addEventListener('click', startApp);
+} catch(e) {
+  console.error('Init error:', e);
+}
+</script>
+
+</body>
+</html>
